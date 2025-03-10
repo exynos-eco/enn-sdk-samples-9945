@@ -3,10 +3,10 @@
 package com.samsung.depthestimation.data
 
 object ModelConstants {
-    const val MODEL_NAME = "MiDaS_v2.nnc"
+    const val MODEL_NAME = "midas_v2.nnc"
 
     val INPUT_DATA_TYPE = DataType.FLOAT32
-    val INPUT_DATA_LAYER = LayerType.HWC
+    val INPUT_DATA_LAYER = LayerType.CHW
 
     const val INPUT_SIZE_W = 256
     const val INPUT_SIZE_H = 256
