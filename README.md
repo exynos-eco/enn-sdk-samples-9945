@@ -1,16 +1,15 @@
 # ENN SDK Samples 9945
 
 ## Introduction
-|Sample Name|Description|
-|-------------|-------|
-|[Image Classification In Android](#image-classification-in-android)| Sample Android application to demonstrate the execution of `Inception v4` model with ENN SDK|
-|[Object Detection In Android](#object-detection-in-android)| Sample Android application to demonstrate the execution of `YOLOv5` model with ENN SDK|
-|[Segmentation In Android](#segmentation-in-android)| Sample Android application to demonstrate the execution of `DeeplabV3` model with ENN SDK|
-|[Pose Estimation In Android](#pose-estimation-in-android)| Sample Android application to demonstrate the execution of `PoseNet` model with ENN SDK|
-|[Image Enhance In Android](#image-enhance-in-android)| Sample Android application to demonstrate the execution of `Zero-DCE` model with ENN SDK|
-|[Depth Estimation In Andriod](#depth-estimation-in-andriod)| Sample Android application to demonstrate the execution of `MiDaS v2` model with ENN SDK|
-|[Performance Comparison](#performance-comparison)| Sample Android application to demonstrate the difference between ENN SDK and TFLite |
-|[NNC Model Tester](#nnc-model-tester)|Sample C++ program to demonstrate the execution of NNC model with ENN SDK|
+|Sample Name| Description                                                                                       |
+|-------------|---------------------------------------------------------------------------------------------------|
+|[Image Classification In Android](#image-classification-in-android)| Sample Android application to demonstrate the execution of `Densenet121` model with ENN SDK       |
+|[Object Detection In Android](#object-detection-in-android)| Sample Android application to demonstrate the execution of `Detr_resnet50_dc5` model with ENN SDK |
+|[Segmentation In Android](#segmentation-in-android)| Sample Android application to demonstrate the execution of `Ddrnet23_slim` model with ENN SDK     |
+|[Pose Estimation In Android](#pose-estimation-in-android)| Sample Android application to demonstrate the execution of `PoseNet` model with ENN SDK           |
+|[Image Enhance In Android](#image-enhance-in-android)| Sample Android application to demonstrate the execution of `Real_ESRGAN_General_x4v3` model with ENN SDK          |
+|[Depth Estimation In Andriod](#depth-estimation-in-andriod)| Sample Android application to demonstrate the execution of `MiDaS v2` model with ENN SDK          | |
+|[NNC Model Tester](#nnc-model-tester)| Sample C++ program to demonstrate the execution of NNC model with ENN SDK                         |
 
 ## Android (Kotlin) Samples
 This section provides an overview of Android (Kotlin) sample applications.
@@ -19,12 +18,11 @@ Each sample application entry provides the details of the functionality of the s
 ***
 
 ### Image Classification In Android
-This sample application demonstrates the execution of a converted [Inception v4](https://www.kaggle.com/models/tensorflow/inception/frameworks/tfLite/variations/v4-quant/versions/1) model using the ENN framework.
-The model is converted using ENN SDK service with the **Accelerate** hardware type option.
+This Application explains how a simple Android Sample Application operates using the [Densenet121](https://prd.ai-studio-farm.com/global/solution/ai/models/detail/118f8cc6-f251-43b7-b8c2-ec77a3c50fda) model optimized for Exynos hardware.
 
 #### Functionality
-The sample application accepts input from a camera feed or an image file and classifies the object within the input.
-The classified items, their corresponding scores, and the inference time are displayed at the bottom of the application interface.
+This application classifies objects in images either from stored image files or captured via the camera.
+The classified items, corresponding scores, and inference time are displayed at the bottom of the application interface.
 
 #### Location
 The sample is available in the `enn-sdk-samples-9945/image-classification` directory within the [Github](https://github.com/exynos-eco/enn-sdk-samples-9945) repository.
@@ -32,27 +30,29 @@ The sample is available in the `enn-sdk-samples-9945/image-classification` direc
 #### Getting Started
 To utilize the sample application:
 1.	Download or clone the sample application from this repository.
-2.	Open the sample application project in Android Studio.
-3.	Connect the ERD board to the computer.
-4.	Run the application (using Shift + F10).
-5.	Select Camera or Image mode and provide the data for inference.
+2.  If there is no available device to run the application, you can use the real devices provided in the Device Farm.
+    For guidance on connecting a device to Android Studio, refer to the [Documentation](https://prd.ai-studio-farm.com/global/development/enn-sdk/document/documentation "...") menu under AI Studio Farm → 2. Device Remote Control → 2-7 ADB Proxy Guide.
+3.  Push a sample image for testing to the following path using adb push.
+4.  After confirming a proper connection with Device Farm, select Tools -> Device Manager in Android Studio.
+5.  Next that check if the physical device is properly connected.
+6.  Run the Image Classification project from the Sample Applications obtained via git clone in Android Studio.
+7.  Upload the image data for inference and execute the application.
 
 To modify the model used in the sample application:
 1.	Copy the desired model file to the `assets` directory of the project.
 2.	Copy the corresponding label text file to the `assets` directory.
 3.	Modify the parameters in the ModelConstants.kt file to reflect the specifications of the new model.
-4.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()` functions.
+4.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()`, `convertBitmapToFloatArray()` functions.
 
 ***
 
 ### Object Detection In Android
-This sample application demonstrates the execution of a converted [YOLOv5](https://github.com/ultralytics/yolov5) model using the ENN framework.
-The model is converted using ENN SDK service with the **Default** hardware type option.
+This Application explains how a simple Android Sample Application operates using the [Detr_resnet50_dc5](https://prd.ai-studio-farm.com/global/solution/ai/models/detail/a631921e-dc8b-46cb-ac17-d23c5a54db26) model optimized for Exynos hardware.
 
 #### Functionality
-The application accepts input from a camera feed or an image file and identifies the object within the input.
-A bounding box is drawn around the detected item, and the label and score that are associated with the object are displayed.
-Additionally, the inference time is displayed at the bottom of the application interface.
+This Sample Application identifies objects in images either from stored image files or input via the camera. 
+Detected objects are highlighted with bounding boxes, and the label and score of each object are displayed. 
+Additionally, the inference time is shown at the bottom of the application interface.
 
 #### Location
 The sample is available in the `enn-sdk-samples-9945/object-detection` directory within the [Github](https://github.com/exynos-eco/enn-sdk-samples-9945) repository.
@@ -60,27 +60,26 @@ The sample is available in the `enn-sdk-samples-9945/object-detection` directory
 #### Getting Started
 To utilize the sample application:
 1.	Download or clone the sample application from this repository.
-2.	Open the sample application project in Android Studio.
-3.	Connect the ERD board to the computer.
-4.	Run the application (using Shift + F10).
-5.	Select Camera or Image mode and provide the data for inference.
+2.  If there is no available device to run the application, you can use the real devices provided in the Device Farm.
+    For guidance on connecting a device to Android Studio, refer to the [Documentation](https://prd.ai-studio-farm.com/global/development/enn-sdk/document/documentation "...") menu under AI Studio Farm → 2. Device Remote Control → 2-7 ADB Proxy Guide.
+3.  Push a sample image for testing to the following path using adb push.
+4.  After confirming a proper connection with Device Farm, select Tools -> Device Manager in Android Studio.
+5.  Next that check if the physical device is properly connected.
+6.  Run the Object Detection project from the Sample Applications obtained via git clone in Android Studio.
+7.  Upload the image data for inference and execute the application.
 
 To modify the model used in the sample application:
 1.	Copy the desired model file to the `assets` directory of the project.
 2.	Copy the corresponding label text file to the `assets` directory.
 3.	Modify the parameters in the ModelConstants.kt file to reflect the specifications of the new model.
-4.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()` functions.
-
-***
+4.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()`, `convertBitmapToFloatArray()` functions.
 
 ### Segmentation In Android
-This sample application demonstrates the execution of a converted [DeeplabV3](https://www.kaggle.com/models/tensorflow/deeplabv3/frameworks/tfLite/variations/default/versions/1) model using the ENN framework.
-The model is converted using ENN SDK service with the **Default** hardware type option.
+This Application explains how a simple Android Sample Application operates using the [Ddrnet23_slim](https://prd.ai-studio-farm.com/kr/solution/ai/models/detail/994cb06f-b886-4fb6-b8e9-8b4efdc8baee) model optimized for Exynos hardware.
 
 #### Functionality
-The application accepts input from a camera feed or an image file and segmentation objects within the input.
-Each pixel of the segmented object is overlayed with a color corresponding to its label, thereby providing a visual representation of the classification.
-Additionally, the inference time is displayed at the bottom of the application interface.
+This Application provides segmentation results for images either from stored image files or captured via the camera. 
+Each pixel of the segmented object is overlaid with a color corresponding to its label, offering a visual representation of the classification.
 
 #### Location
 The sample is available in the `enn-sdk-samples-9945/segmentation` directory within the [Github](https://github.com/exynos-eco/enn-sdk-samples-9945) repository.
@@ -88,25 +87,26 @@ The sample is available in the `enn-sdk-samples-9945/segmentation` directory wit
 #### Getting Started
 To utilize the sample application:
 1.	Download or clone the sample application from this repository.
-2.	Open the sample application project in Android Studio.
-3.	Connect the ERD board to the computer.
-4.	Run the application (using Shift + F10).
-5.	Select Camera or Image mode and provide the data for inference.
+2.  If there is no available device to run the application, you can use the real devices provided in the Device Farm.
+    For guidance on connecting a device to Android Studio, refer to the [Documentation](https://prd.ai-studio-farm.com/global/development/enn-sdk/document/documentation "...") menu under AI Studio Farm → 2. Device Remote Control → 2-7 ADB Proxy Guide.
+3.  Push a sample image for testing to the following path using adb push.
+4.  After confirming a proper connection with Device Farm, select Tools -> Device Manager in Android Studio.
+5.  Next that check if the physical device is properly connected.
+6.  Run the Object Detection project from the Sample Applications obtained via git clone in Android Studio.
+7.  Upload the image data for inference and execute the application.
 
 To modify the model used in the sample application:
 1.	Copy the desired model file to the `assets` directory of the project.
 2.	Modify the parameters in the ModelConstants.kt file to reflect the specifications of the new model.
-3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()` functions.
+3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()`, `convertBitmapToFloatArray()` functions.
 
 ***
 
 ### Pose Estimation In Android
-This sample application demonstrates the execution of a converted [PoseNet](https://www.kaggle.com/models/tensorflow/posenet-mobilenet/frameworks/tfJs/variations/float-075/versions/1) model using the ENN framework.
-The model is converted using ENN SDK service with the **Default** hardware type option.
+This Application explains how a simple Android Sample Application operates using the [Posenet](https://prd.ai-studio-farm.com/kr/solution/ai/models/detail/f40473cb-a6e6-42a3-a50a-daf428273eab) model optimized for Exynos hardware.
 
 #### Functionality
-The application accepts input from a camera feed or an image file.
-Then, it detects the points of a person and overlays the points and edges of a person.
+This Application detects key points in images from stored image files or those captured via the camera and automatically measures joint positions. 
 Additionally, the inference time is displayed at the bottom of the application interface.
 
 #### Location
@@ -115,25 +115,26 @@ The sample is available in the `enn-sdk-samples-9945/pose-estimation` directory 
 #### Getting Started
 To utilize the sample application:
 1.	Download or clone the sample application from this repository.
-2.	Open the sample application project in Android Studio.
-3.	Connect the ERD board to the computer.
-4.	Run the application (using Shift + F10).
-5.	Select Camera or Image mode and provide the data for inference.
+2.  If there is no available device to run the application, you can use the real devices provided in the Device Farm.
+    For guidance on connecting a device to Android Studio, refer to the [Documentation](https://prd.ai-studio-farm.com/global/development/enn-sdk/document/documentation "...") menu under AI Studio Farm → 2. Device Remote Control → 2-7 ADB Proxy Guide.
+3.  Push a sample image for testing to the following path using adb push.
+4.  After confirming a proper connection with Device Farm, select Tools -> Device Manager in Android Studio.
+5.  Next that check if the physical device is properly connected.
+6.  Run the Object Detection project from the Sample Applications obtained via git clone in Android Studio.
+7.  Upload the image data for inference and execute the application.
 
 To modify the model used in the sample application:
 1.	Copy the desired model file to the `assets` directory within the project.
 2.	Modify the parameters in the ModelConstants.kt file to reflect the specifications of the new model.
-3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()` functions.
+3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()`, `convertBitmapToFloatArray()` functions.
 
 ***
 
 ### Image Enhance In Android
-This sample application demonstrates the execution of a converted [Zero-DCE](https://www.kaggle.com/models/sayannath235/zero-dce) model using the ENN framework.
-The model is converted using ENN SDK service with the **Default** hardware type option.
+This document explains how a simple Android Sample Application operates using the [Real_ESRGAN_General_x4v3](https://prd.ai-studio-farm.com/global/solution/ai/models/detail/36ad7134-5621-48b2-8ddf-e4889417f6ef) model optimized for Exynos hardware.
 
 #### Functionality
-The application accepts input from an image file and enhances it.
-Specifically, it takes low-light images and improves their quality.
+This Application enhances the low-light quality of images from stored image files or those captured via the camera.
 Additionally, the inference time is displayed at the bottom of the application interface.
 
 #### Location
@@ -142,25 +143,27 @@ The sample is available in the `enn-sdk-samples-9945/image-enhance` directory wi
 #### Getting Started
 To utilize the sample application:
 1.	Download or clone the sample application from this repository.
-2.	Open the sample application project in Android Studio.
-3.	Connect the ERD board to the computer.
-4.	Run the application (using Shift + F10).
-5.	Provide the image data for inference.
+2.  If there is no available device to run the application, you can use the real devices provided in the Device Farm.
+    For guidance on connecting a device to Android Studio, refer to the [Documentation](https://prd.ai-studio-farm.com/global/development/enn-sdk/document/documentation "...") menu under AI Studio Farm → 2. Device Remote Control → 2-7 ADB Proxy Guide.
+3.  Push a sample image for testing to the following path using adb push.
+4.  After confirming a proper connection with Device Farm, select Tools -> Device Manager in Android Studio.
+5.  Next that check if the physical device is properly connected.
+6.  Run the Object Detection project from the Sample Applications obtained via git clone in Android Studio.
+7.  Upload the image data for inference and execute the application.
 
 To modify the model used in the sample application:
 1.	Copy the desired model file to the `assets` directory of the project.
 2.	Modify the parameters in the ModelConstants.kt file to reflect the specifications of the new model.
-3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()` functions.
+3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()`, `convertBitmapToFloatArray()` functions.
 
 ***
 
-### Depth Estimation In Andriod
-This sample application demonstrates the execution of a converted [MiDaS V2](https://www.kaggle.com/models/intel/midas/frameworks/tfLite/variations/v2-1-small-lite/versions/1) model using the ENN framework.
-The model is converted using ENN SDK service with the **Default** hardware type option.
+### Depth Estimation In Android
+This Application explains how a simple Android Sample Application operates using the [MiDaS v2](https://prd.ai-studio-farm.com/kr/solution/ai/models/detail/73bcae23-4a07-4df9-b0c5-80504427c11c) model optimized for Exynos hardware.
 
 #### Functionality
-The application accepts input from a camera feed or an image file.
-A color that represents the estimated distance is overlayed on each pixel, thereby providing a visual representation of depth.
+This Application receives input from an image file or a camera. 
+A color representing the estimated distance is overlaid on each pixel, providing a visual representation of depth. 
 Additionally, the inference time is displayed at the bottom of the application interface.
 
 #### Location
@@ -169,47 +172,20 @@ The sample is available in the `enn-sdk-samples-9945/depth-estimation` directory
 #### Getting Started
 To utilize the sample application:
 1.	Download or clone the sample application from this repository.
-2.	Open the sample application project in Android Studio.
-3.	Connect the ERD board to the computer.
-4.	Run the application (using Shift + F10).
-5.	Select Camera or Image mode and provide the data for inference.
+2.  If there is no available device to run the application, you can use the real devices provided in the Device Farm.
+    For guidance on connecting a device to Android Studio, refer to the [Documentation](https://prd.ai-studio-farm.com/global/development/enn-sdk/document/documentation "...") menu under AI Studio Farm → 2. Device Remote Control → 2-7 ADB Proxy Guide.
+3.  Push a sample image for testing to the following path using adb push.
+4.  After confirming a proper connection with Device Farm, select Tools -> Device Manager in Android Studio.
+5.  Next that check if the physical device is properly connected.
+6.  Run the Object Detection project from the Sample Applications obtained via git clone in Android Studio.
+7.  Upload the image data for inference and execute the application.
 
 To modify the model used in the sample application:
 1.	Copy the desired model file to the `assets` directory of the project.
 2.	Modify the parameters in the ModelConstants.kt file to reflect the specifications of the new model.
-3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()` functions.
+3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()`, `convertBitmapToFloatArray()` functions.
 
 ***
-
-### Performance Comparison
-This sample application provides a side-by-side analysis of the execution time differences between the ENN SDK and TFLite.
-
-#### Functionality
-This application builds upon the Image Classification in Android sample application.    
-In addition to executing the NNC model using the ENN framework, it runs the corresponding TFLite model.
-The results and inference time of the ENN framework and TFLite are displayed at the bottom of the application interface.
-
-#### Location
-This sample is available in the `enn-sdk-samples-9945/perf-compare` directory within the [Github](https://github.com/exynos-eco/enn-sdk-samples-9945) repository.
-
-#### Getting Started
-To utilize the sample application:
-1.	Download or clone the sample application from this repository.
-2.	Open the sample application project in Android Studio.
-3.	Connect the ERD board to the computer.
-4.	Run the application (using Shift + F10).
-5.	Select Camera or Image mode and provide the data for inference.
-
-***
-
-
-
-
-
-
-
-
-
 
 ## Native Samples
 This section provides an overview of the native sample program.

@@ -1,21 +1,23 @@
-# Depth Estimation In Andriod
-This sample application demonstrates the execution of a converted [MiDaS V2](https://www.kaggle.com/models/intel/midas/frameworks/tfLite/variations/v2-1-small-lite/versions/1) model using the ENN framework.
-The model is converted using ENN SDK service with the **Default** hardware type option.
+### Depth Estimation In Android
+This Application explains how a simple Android Sample Application operates using the [MiDaS v2](https://prd.ai-studio-farm.com/kr/solution/ai/models/detail/73bcae23-4a07-4df9-b0c5-80504427c11c) model optimized for Exynos hardware.
 
-## Functionality
-The application accepts input from a camera feed or an image file.
-A color that represents the estimated distance is overlayed on each pixel, thereby providing a visual representation of depth.
+#### Functionality
+This Application receives input from an image file or a camera.
+A color representing the estimated distance is overlaid on each pixel, providing a visual representation of depth.
 Additionally, the inference time is displayed at the bottom of the application interface.
 
-## Getting Started
+#### Getting Started
 To utilize the sample application:
 1.	Download or clone the sample application from this repository.
-2.	Open the sample application project in Android Studio.
-3.	Connect the ERD board to the computer.
-4.	Run the application (using Shift + F10).
-5.	Select Camera or Image mode and provide the data for inference.
+2.  If there is no available device to run the application, you can use the real devices provided in the Device Farm.
+    For guidance on connecting a device to Android Studio, refer to the [Documentation](https://prd.ai-studio-farm.com/global/development/enn-sdk/document/documentation "...") menu under AI Studio Farm → 2. Device Remote Control → 2-7 ADB Proxy Guide.
+3.  Push a sample image for testing to the following path using adb push.
+4.  After confirming a proper connection with Device Farm, select Tools -> Device Manager in Android Studio.
+5.  Next that check if the physical device is properly connected.
+6.  Run the Object Detection project from the Sample Applications obtained via git clone in Android Studio.
+7.  Upload the image data for inference and execute the application.
 
 To modify the model used in the sample application:
 1.	Copy the desired model file to the `assets` directory of the project.
 2.	Modify the parameters in the ModelConstants.kt file to reflect the specifications of the new model.
-3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()` functions.
+3.	If the inputs and outputs of the model differ from the pre-designed sample application, modify the `preProcess()` and `postProcess()`, `convertBitmapToFloatArray()` functions.
