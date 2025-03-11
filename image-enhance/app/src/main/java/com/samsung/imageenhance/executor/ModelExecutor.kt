@@ -111,7 +111,7 @@ class ModelExecutor(
     private fun postProcess(
         output: ByteArray, layerType: Enum<LayerType> = LayerType.HWC
     ): IntArray {
-        val totalPixels = INPUT_SIZE_W * INPUT_SIZE_H
+        val totalPixels = OUTPUT_SIZE_W * OUTPUT_SIZE_H
         val data = convertOutputByteToFloatArray(output)
 
         val (offset, stride) = if (layerType == LayerType.CHW) {
