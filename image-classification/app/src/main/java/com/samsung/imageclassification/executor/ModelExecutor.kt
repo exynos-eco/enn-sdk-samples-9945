@@ -5,7 +5,7 @@ package com.samsung.imageclassification.executor
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.SystemClock
-import com.samsung.imageclassification.data.DataType
+import android.util.Log
 import com.samsung.imageclassification.data.LayerType
 import com.samsung.imageclassification.data.ModelConstants
 import com.samsung.imageclassification.enn_type.BufferSetInfo
@@ -72,7 +72,6 @@ class ModelExecutor(
         inferenceTime = SystemClock.uptimeMillis() - inferenceTime
         // Copy Output Data
         val output = ennMemcpyDeviceToHost(bufferSet, nInBuffer)
-
         executorListener?.onResults(
             postProcess(output), inferenceTime
         )
@@ -88,141 +87,83 @@ class ModelExecutor(
     }
 
     private fun preProcess(image: Bitmap): ByteArray {
-        val byteArray = when (INPUT_DATA_TYPE) {
-            DataType.UINT8 -> {
-                convertBitmapToUByteArray(image, INPUT_DATA_LAYER).asByteArray()
-            }
+        val resizedBitmap = Bitmap.createScaledBitmap(image, INPUT_SIZE_W, INPUT_SIZE_H, true)
+        val floatArray = convertBitmapToFloatArray(resizedBitmap, INPUT_DATA_LAYER)
+        val byteBuffer = ByteBuffer.allocate(floatArray.size * Float.SIZE_BYTES)
 
-            DataType.FLOAT32 -> {
-                val data = convertBitmapToFloatArray(image, INPUT_DATA_LAYER)
-                val byteBuffer = ByteBuffer.allocate(data.size * Float.SIZE_BYTES)
-                byteBuffer.order(ByteOrder.nativeOrder())
-                byteBuffer.asFloatBuffer().put(data)
-                byteBuffer.array()
-            }
+        byteBuffer.order(ByteOrder.nativeOrder())
+        byteBuffer.asFloatBuffer().put(floatArray)
 
-            else -> {
-                throw IllegalArgumentException("Unsupported input data type: ${INPUT_DATA_TYPE}")
-            }
-        }
-
-        return byteArray
+        return byteBuffer.array()
     }
 
     private fun postProcess(modelOutput: ByteArray): Map<String, Float> {
-        val output = when (OUTPUT_DATA_TYPE) {
-            DataType.UINT8 -> {
-                modelOutput.asUByteArray().mapIndexed { index, value ->
-                    labelList[index] to dequantizedValues[((value.toInt()
-                            - OUTPUT_CONVERSION_OFFSET)
-                            / OUTPUT_CONVERSION_SCALE).toInt()]
-                }.filter { it.second >= threshold }.sortedByDescending { it.second }.toMap()
-            }
+        val byteBuffer = ByteBuffer.wrap(modelOutput).order(ByteOrder.nativeOrder())
+        val floatBuffer = byteBuffer.asFloatBuffer()
+        val data = FloatArray(floatBuffer.remaining())
+        floatBuffer.get(data)
 
-            DataType.FLOAT32 -> {
-                val byteBuffer = ByteBuffer.wrap(modelOutput).order(ByteOrder.nativeOrder())
-                val floatBuffer = byteBuffer.asFloatBuffer()
-                val data = FloatArray(floatBuffer.remaining())
-
-                floatBuffer.get(data)
-                data.mapIndexed { index, value ->
-                    labelList[index] to ((value
-                            - OUTPUT_CONVERSION_OFFSET)
-                            / OUTPUT_CONVERSION_SCALE)
-                }.filter { it.second >= threshold }.sortedByDescending { it.second }.toMap()
-            }
-
-            else -> {
-                throw IllegalArgumentException("Unsupported output data type: ${OUTPUT_DATA_TYPE}")
-            }
+        if (labelList.size != data.size) {
+            return emptyMap()
         }
+
+        val maxLogit = data.maxOrNull() ?: 0f
+        val expScores = data.map { Math.exp((it - maxLogit).toDouble()) }
+        val sumExpScores = expScores.sum()
+        val probabilities = expScores.map { (it / sumExpScores).toFloat() }
+
+        val output = probabilities.mapIndexed { index, value ->
+            labelList[index] to value
+        }.filter { it.second >= threshold }
+            .sortedByDescending { it.second }
+            .toMap()
 
         return output
     }
 
-    private fun convertBitmapToUByteArray(
-        image: Bitmap, layerType: Enum<LayerType> = LayerType.HWC
-    ): UByteArray {
-        val totalPixels = INPUT_SIZE_H * INPUT_SIZE_W
-        val pixels = IntArray(totalPixels)
-
-        image.getPixels(
-            pixels,
-            0,
-            INPUT_SIZE_W,
-            0,
-            0,
-            INPUT_SIZE_W,
-            INPUT_SIZE_H
-        )
-
-        val uByteArray = UByteArray(totalPixels * INPUT_SIZE_C)
-        val offset: IntArray
-        val stride: Int
-
-        if (layerType == LayerType.CHW) {
-            offset = intArrayOf(0, totalPixels, 2 * totalPixels)
-            stride = 1
-        } else {
-            offset = intArrayOf(0, 1, 2)
-            stride = 3
-        }
-
-        for (i in 0 until totalPixels) {
-            val color = pixels[i]
-            uByteArray[i * stride + offset[0]] = ((((color shr 16) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE).toInt().toUByte()
-            uByteArray[i * stride + offset[1]] = ((((color shr 8) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE).toInt().toUByte()
-            uByteArray[i * stride + offset[2]] = ((((color shr 0) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE).toInt().toUByte()
-        }
-
-        return uByteArray
-    }
-
     private fun convertBitmapToFloatArray(
-        image: Bitmap, layerType: Enum<LayerType> = LayerType.HWC
+        image: Bitmap, layerType: Enum<LayerType> = LayerType.CHW
     ): FloatArray {
         val totalPixels = INPUT_SIZE_H * INPUT_SIZE_W
         val pixels = IntArray(totalPixels)
 
-        image.getPixels(
-            pixels,
-            0,
-            INPUT_SIZE_W,
-            0,
-            0,
-            INPUT_SIZE_W,
-            INPUT_SIZE_H
-        )
+        image.getPixels(pixels, 0, INPUT_SIZE_W, 0, 0, INPUT_SIZE_W, INPUT_SIZE_H)
 
         val floatArray = FloatArray(totalPixels * INPUT_SIZE_C)
-        val offset: IntArray
-        val stride: Int
+        val mean = floatArrayOf(0.485f, 0.456f, 0.406f)
+        val std = floatArrayOf(0.229f, 0.224f, 0.225f)
 
-        if (layerType == LayerType.CHW) {
-            offset = intArrayOf(0, totalPixels, 2 * totalPixels)
-            stride = 1
-        } else {
-            offset = intArrayOf(0, 1, 2)
-            stride = 3
-        }
+        when (layerType) {
+            LayerType.CHW -> {
+                for (i in 0 until totalPixels) {
+                    val color = pixels[i]
 
-        for (i in 0 until totalPixels) {
-            val color = pixels[i]
-            floatArray[i * stride + offset[0]] = ((((color shr 16) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE)
-            floatArray[i * stride + offset[1]] = ((((color shr 8) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE)
-            floatArray[i * stride + offset[2]] = ((((color shr 0) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE)
+                    val r = ((color shr 16) and 0xFF) / 255.0f
+                    val g = ((color shr 8) and 0xFF) / 255.0f
+                    val b = ((color shr 0) and 0xFF) / 255.0f
+
+                    floatArray[i] = (r - mean[0]) / std[0]
+                    floatArray[i + totalPixels] = (g - mean[1]) / std[1]
+                    floatArray[i + 2 * totalPixels] = (b - mean[2]) / std[2]
+                }
+            }
+
+            LayerType.HWC -> {
+                for (i in 0 until totalPixels) {
+                    val color = pixels[i]
+                    val r = ((color shr 16) and 0xFF) / 255.0f
+                    val g = ((color shr 8) and 0xFF) / 255.0f
+                    val b = ((color shr 0) and 0xFF) / 255.0f
+
+                    floatArray[i * 3] = (r - mean[0]) / std[0]
+                    floatArray[i * 3 + 1] = (g - mean[1]) / std[1]
+                    floatArray[i * 3 + 2] = (b - mean[2]) / std[2]
+                }
+            }
+
+            else -> {
+                Log.e("ModelExecutor", "Unsupported LayerType: $layerType")
+            }
         }
 
         return floatArray
@@ -249,7 +190,8 @@ class ModelExecutor(
     private fun getLabels() {
         try {
             context.assets.open(LABEL_FILE)
-                .bufferedReader().use { reader -> labelList = reader.readLines() }
+                .bufferedReader().use { reader -> labelList = reader.readLines()
+                }
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -264,24 +206,13 @@ class ModelExecutor(
 
     companion object {
         var labelList: List<String> = mutableListOf()
-        val dequantizedValues = List(256) { it.toFloat() * 0.00390625F }
 
         private const val MODEL_NAME = ModelConstants.MODEL_NAME
 
         private val INPUT_DATA_LAYER = ModelConstants.INPUT_DATA_LAYER
-        private val INPUT_DATA_TYPE = ModelConstants.INPUT_DATA_TYPE
-
         private const val INPUT_SIZE_W = ModelConstants.INPUT_SIZE_W
         private const val INPUT_SIZE_H = ModelConstants.INPUT_SIZE_H
         private const val INPUT_SIZE_C = ModelConstants.INPUT_SIZE_C
-
-        private const val INPUT_CONVERSION_SCALE = ModelConstants.INPUT_CONVERSION_SCALE
-        private const val INPUT_CONVERSION_OFFSET = ModelConstants.INPUT_CONVERSION_OFFSET
-
-        private val OUTPUT_DATA_TYPE = ModelConstants.OUTPUT_DATA_TYPE
-
-        private const val OUTPUT_CONVERSION_SCALE = ModelConstants.OUTPUT_CONVERSION_SCALE
-        private const val OUTPUT_CONVERSION_OFFSET = ModelConstants.OUTPUT_CONVERSION_OFFSET
 
         private const val LABEL_FILE = ModelConstants.LABEL_FILE
     }
