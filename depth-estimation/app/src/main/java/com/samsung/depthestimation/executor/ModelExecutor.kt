@@ -87,10 +87,6 @@ class ModelExecutor(
 
     private fun preProcess(image: Bitmap): ByteArray {
         val byteArray = when (INPUT_DATA_TYPE) {
-            DataType.UINT8 -> {
-                convertBitmapToUByteArray(image, INPUT_DATA_LAYER).asByteArray()
-            }
-
             DataType.FLOAT32 -> {
                 val data = convertBitmapToFloatArray(image, INPUT_DATA_LAYER)
                 val byteBuffer = ByteBuffer.allocate(data.size * Float.SIZE_BYTES)
@@ -98,7 +94,6 @@ class ModelExecutor(
                 byteBuffer.asFloatBuffer().put(data)
                 byteBuffer.array()
             }
-
             else -> {
                 throw IllegalArgumentException("Unsupported input data type: ${INPUT_DATA_TYPE}")
             }
@@ -116,50 +111,6 @@ class ModelExecutor(
             val currentValue = (value - OUTPUT_CONVERSION_OFFSET) / OUTPUT_CONVERSION_SCALE
             (255 * ((currentValue - min) / (max - min))).toInt()
         }.toIntArray()
-    }
-
-    private fun convertBitmapToUByteArray(
-        image: Bitmap, layerType: Enum<LayerType> = LayerType.HWC
-    ): UByteArray {
-        val totalPixels = INPUT_SIZE_H * INPUT_SIZE_W
-        val pixels = IntArray(totalPixels)
-
-        image.getPixels(
-            pixels,
-            0,
-            INPUT_SIZE_W,
-            0,
-            0,
-            INPUT_SIZE_W,
-            INPUT_SIZE_H
-        )
-
-        val uByteArray = UByteArray(totalPixels * INPUT_SIZE_C)
-        val offset: IntArray
-        val stride: Int
-
-        if (layerType == LayerType.CHW) {
-            offset = intArrayOf(0, totalPixels, 2 * totalPixels)
-            stride = 1
-        } else {
-            offset = intArrayOf(0, 1, 2)
-            stride = 3
-        }
-
-        for (i in 0 until totalPixels) {
-            val color = pixels[i]
-            uByteArray[i * stride + offset[0]] = ((((color shr 16) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE).toInt().toUByte()
-            uByteArray[i * stride + offset[1]] = ((((color shr 8) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE).toInt().toUByte()
-            uByteArray[i * stride + offset[2]] = ((((color shr 0) and 0xFF)
-                    - INPUT_CONVERSION_OFFSET)
-                    / INPUT_CONVERSION_SCALE).toInt().toUByte()
-        }
-
-        return uByteArray
     }
 
     private fun convertBitmapToFloatArray(
@@ -210,10 +161,6 @@ class ModelExecutor(
         modelOutput: ByteArray
     ): FloatArray {
         return when (OUTPUT_DATA_TYPE) {
-            DataType.UINT8 -> {
-                modelOutput.toUByteArray().map { it.toFloat() }.toFloatArray()
-            }
-
             DataType.FLOAT32 -> {
                 val byteBuffer = ByteBuffer.wrap(modelOutput).order(ByteOrder.nativeOrder())
                 val floatBuffer = byteBuffer.asFloatBuffer()
@@ -222,7 +169,6 @@ class ModelExecutor(
                 floatBuffer.get(floatArray)
                 floatArray
             }
-
             else -> {
                 throw IllegalArgumentException("Unsupported output data type: ${OUTPUT_DATA_TYPE}")
             }

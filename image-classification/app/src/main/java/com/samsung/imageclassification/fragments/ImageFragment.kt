@@ -94,15 +94,14 @@ class ImageFragment : Fragment(), ModelExecutor.ExecutorListener {
     }
 
     private fun processImage(bitmap: Bitmap): Bitmap {
-        val (scaledWidth, scaledHeight) = calculateScaleSize(
-            bitmap.width, bitmap.height
-        )
-        val scaledBitmap = Bitmap.createScaledBitmap(
-            bitmap, scaledWidth, scaledHeight, true
-        )
-        val (x, y) = calculateCenterCropPosition(scaledBitmap)
+        val (scaledWidth, scaledHeight) = calculateScaleSize(bitmap.width, bitmap.height)
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, true)
 
-        return Bitmap.createBitmap(scaledBitmap, x, y, INPUT_SIZE_W, INPUT_SIZE_H)
+        val (x, y) = calculateCenterCropPosition(scaledBitmap)
+        val cropWidth = minOf(INPUT_SIZE_W, scaledBitmap.width - x)
+        val cropHeight = minOf(INPUT_SIZE_H, scaledBitmap.height - y)
+
+        return Bitmap.createBitmap(scaledBitmap, x, y, cropWidth, cropHeight)
     }
 
     private fun calculateScaleSize(bitmapWidth: Int, bitmapHeight: Int): Pair<Int, Int> {
@@ -114,10 +113,9 @@ class ImageFragment : Fragment(), ModelExecutor.ExecutorListener {
     }
 
     private fun calculateCenterCropPosition(scaledBitmap: Bitmap): Pair<Int, Int> {
-        return Pair(
-            (scaledBitmap.width - INPUT_SIZE_W) / 2,
-            (scaledBitmap.height - INPUT_SIZE_H) / 2
-        )
+        val x = maxOf((scaledBitmap.width - INPUT_SIZE_W) / 2, 0)
+        val y = maxOf((scaledBitmap.height - INPUT_SIZE_H) / 2, 0)
+        return Pair(x, y)
     }
 
     private fun adjustThreshold(delta: Float) {
